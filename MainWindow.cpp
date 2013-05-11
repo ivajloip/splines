@@ -8,7 +8,7 @@
 #include <iostream>
 
 MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
-  this->resize(800, 640);
+  this->resize(640, 480);
   this->setWindowTitle("Splines approximation");
   
   // Create the menu
@@ -22,11 +22,11 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
 }
 
 void MainWindow::createMenuItem(QString label,
-  QString iconLocation,
-  QString shortCut,
-  QWidget *addTo,
-  const char * func,
-  QWidget* signalTo) {
+    QString iconLocation,
+    QString shortCut,
+    QWidget *addTo,
+    const char * func,
+    QWidget* signalTo) {
   QAction* tmp = new QAction(label, this);
   tmp->setShortcut(shortCut);
   connect(tmp, SIGNAL(triggered()), signalTo, func);
