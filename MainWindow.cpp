@@ -34,7 +34,7 @@ void MainWindow::createMenuItem(QString label,
 }
 
 void MainWindow::closeSlot() {
-    this->close();
+  this->close();
 }
 
 void MainWindow::importSlot() {
@@ -64,4 +64,10 @@ void MainWindow::importSlot() {
 }
 
 void MainWindow::exportSlot() {
+  QString fileName = QFileDialog::getSaveFileName(this,
+      tr("Save File"),
+      "",
+      tr("Files (*.*)"));
+
+  std::cout << fileName.toStdString().c_str() << std::endl;
 }
