@@ -2,6 +2,7 @@
 #include <QMenuBar>
 #include <QAction>
 #include <QFileDialog>
+#include <QInputDialog>
 #include <MainWindow.h>
 
 #include <fstream>
@@ -64,10 +65,13 @@ void MainWindow::importSlot() {
 }
 
 void MainWindow::exportSlot() {
+  int step = QInputDialog::getInt(this, tr("Title"), tr("Label"), 1, 1, 10000);
+
   QString fileName = QFileDialog::getSaveFileName(this,
       tr("Save File"),
       "",
       tr("Files (*.*)"));
 
+  std::cout << step << std::endl;
   std::cout << fileName.toStdString().c_str() << std::endl;
 }
