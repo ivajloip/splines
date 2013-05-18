@@ -4,6 +4,7 @@
 #include <QFileDialog>
 #include <QInputDialog>
 #include <MainWindow.h>
+#include <SplinesCalculator.h>
 
 #include <fstream>
 #include <iostream>
@@ -20,6 +21,8 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
   createMenuItem("Save result", NULL, "Ctrl+S", file, SLOT(exportSlot()), this);
   file->addSeparator();
   createMenuItem("Exit", NULL, "Esc", file, SLOT(closeSlot()), this);
+
+  splinesCalculator = NULL;
 }
 
 void MainWindow::createMenuItem(QString label,
@@ -44,8 +47,6 @@ void MainWindow::importSlot() {
       "",
       tr("Files (*.*)"));
 
-  std::cout << fileName.toStdString() << std::endl;
-
   std::ifstream in(fileName.toStdString().c_str());
 
   if (!in) {
@@ -53,15 +54,31 @@ void MainWindow::importSlot() {
     return;
   }
 
-  std::cout << "Reading\n";
+  std::cout << "Reading file: " << fileName.toStdString() << std::endl;
 
-  while(!in.eof()) {
-    char tmp;
-    in >> tmp;
-    std::cout << tmp;
+  int m;
+
+  in >> m;
+  std::cout << m << std::endl;
+  PointsType* points = new PointsType[m];
+
+  for (int i = 0; i < m; i++) {
+    in >> points[i].first;
+    in >> points[i].second;
+    std::cout << points[i].first << points[i].second << std::endl;
   }
 
   std::cout << std::endl;
+
+  if (splinesCalculator != NULL) {
+    std::cout << "Deleting old instance\n";
+
+    delete splinesCalculator;
+  }
+
+  splinesCalculator = new SplinesCalculator(points, m);
+
+  in.close();
 }
 
 void MainWindow::exportSlot() {
@@ -74,4 +91,21 @@ void MainWindow::exportSlot() {
 
   std::cout << step << std::endl;
   std::cout << fileName.toStdString().c_str() << std::endl;
+
+  std::ofstream out(fileName.toStdString().c_str());
+
+  if (!out) {
+    // TODO: log error
+    return;
+  }
+
+  int pointsCount = splinesCalculator->getResultPointsCount();
+  PointsType* points = splinesCalculator->getResultPoints();
+
+  out << pointsCount << std::endl;
+
+  for (int i = 0; i < pointsCount; i += step) {
+    out << points[i].first / step << " " << points[i].second << std::endl;
+  }
+  out.close();
 }
