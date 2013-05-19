@@ -68,6 +68,8 @@ void MainWindow::importSlot() {
     std::cout << points[i].first << points[i].second << std::endl;
   }
 
+  in.close();
+
   std::cout << std::endl;
 
   if (splinesCalculator != NULL) {
@@ -77,8 +79,6 @@ void MainWindow::importSlot() {
   }
 
   splinesCalculator = new SplinesCalculator(points, m);
-
-  in.close();
 }
 
 void MainWindow::exportSlot() {
