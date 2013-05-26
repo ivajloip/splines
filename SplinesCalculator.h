@@ -12,6 +12,23 @@ class SplinesCalculator {
 
     PointsType* _points;
 
+    double* derivativeParameters;
+
+    double* mainDiag, *lowerDiag, *upperDiag, *matrixRightSides;
+ 
+    void tridiagMatrixAlgorithm(double* lowerDiag,
+        double* mainDiag,
+        double* upperDiag,
+        double* matrixRightSides);
+
+    double dividedDifference(PointsType* points,
+        int first_point,
+        int second_point);
+
+    double spline(int variable,
+        int intervalStart,
+        int intervalEnd);
+
   public: 
     SplinesCalculator(PointsType* points, int pointsCount); 
 
