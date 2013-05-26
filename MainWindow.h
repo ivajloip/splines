@@ -3,11 +3,13 @@
 #define __main_window_h__
 
 #include <QMainWindow>
+#include <SplinesCalculator.h>
 
 class MainWindow : public QMainWindow {
     Q_OBJECT
 
 private:
+  SplinesCalculator* splinesCalculator;
     
   void createMenuItem(QString label,
       QString iconLocation,

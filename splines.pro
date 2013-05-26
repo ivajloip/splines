@@ -8,5 +8,5 @@ DEPENDPATH += .
 INCLUDEPATH += .
 
 # Input
-HEADERS += MainWindow.h
-SOURCES += main.cpp MainWindow.cpp
+HEADERS += MainWindow.h SplinesCalculator.h
+SOURCES += main.cpp MainWindow.cpp moc_SplinesCalculator.cpp
