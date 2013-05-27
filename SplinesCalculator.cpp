@@ -6,6 +6,10 @@ SplinesCalculator::SplinesCalculator(PointsType* points, int pointsCount) {
   this->mainDiag = new double[pointsCount + 1];
   this->lowerDiag = new double[pointsCount];
   this->matrixRightSides = new double[pointsCount + 1];
+  this->derivativeParameters = new double[pointsCount + 1];
+  
+  for (int i = 0; i < pointsCount + 1; i++)
+    this->derivativeParameters[i] = 0;
 
   double divDiffFirst = this->dividedDifference(points, 1, 0); 
   this->_pointsCount = pointsCount + 1;
