@@ -7,8 +7,6 @@
 
 #include <utility>
 
-typedef std::pair<int, PointsType*> PointsData;
-
 class MainWindow : public QMainWindow {
     Q_OBJECT
 
@@ -24,9 +22,11 @@ private:
 
   void createMenu();
 
-  void readPointsFromFile(QString fileName, PointsData& pointsData);
+  void readPointsFromFile(QString fileName,
+      PointsType*& points,
+      int& pointsCount);
 
-  void updateSplinesCalculator(PointsData pointsData);
+  void updateSplinesCalculator(PointsType* pointsData, int pointsCount);
 
   void savePointsToFile(QString fileName, int step = 1); 
 

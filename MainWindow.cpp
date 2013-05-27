@@ -8,6 +8,7 @@
 
 #include <fstream>
 #include <iostream>
+#include <algorithm>
 
 MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
   this->resize(640, 480);
@@ -53,10 +54,14 @@ void MainWindow::importSlot() {
 
   std::cout << std::endl;
 
-  PointsData pointsData;
-  readPointsFromFile(fileName, pointsData);
+  PointsType* points;
+  int pointsCount;
 
-  updateSplinesCalculator(pointsData);
+  readPointsFromFile(fileName, points, pointsCount);
+
+  std::sort(points, points + pointsCount);
+
+  updateSplinesCalculator(points, pointsCount);
 }
 
 void MainWindow::exportSlot() {
@@ -108,7 +113,7 @@ void MainWindow::savePointsToFile(QString fileName, int step) {
 }
 
 
-void MainWindow::readPointsFromFile(QString fileName, PointsData& pointsData) {
+void MainWindow::readPointsFromFile(QString fileName, PointsType*& points, int& pointsCount) {
   std::ifstream in(fileName.toStdString().c_str());
 
   if (!in) {
@@ -121,12 +126,12 @@ void MainWindow::readPointsFromFile(QString fileName, PointsData& pointsData) {
   std::cout << "Reading file: " << fileName.toStdString() << std::endl;
 
   int m;
-  in >> m;
-  std::cout << m << std::endl;
+  in >> pointsCount;
+  std::cout << pointsCount << std::endl;
 
-  PointsType* points = new PointsType[m];
+  points = new PointsType[m];
 
-  for (int i = 0; i < m; i++) {
+  for (int i = 0; i < pointsCount; i++) {
     in >> points[i].first;
     in >> points[i].second;
 
@@ -135,18 +140,25 @@ void MainWindow::readPointsFromFile(QString fileName, PointsData& pointsData) {
 
   in.close();
 
-  pointsData.first = m;
-  pointsData.second = points;
 }
 
 
-void MainWindow::updateSplinesCalculator(PointsData pointsData) {
+void MainWindow::updateSplinesCalculator(PointsType* points, int pointsCount) {
   if (splinesCalculator != NULL) {
     std::cout << "Deleting old instance\n";
 
     delete splinesCalculator;
   }
 
-  std::cout << "Constructing SplinesCalcualtor\n";
-  splinesCalculator = new SplinesCalculator(pointsData);
+  std::cout << "Constructing SplinesCalcualtor with:\n";
+
+  for (int i = 0; i < pointsCount; i++) {
+    std::cout << points[i].first << " " << points[i].second << std::endl;
+  }
+
+  splinesCalculator = new SplinesCalculator(points, pointsCount);
+}
+
+bool cmpPoints(PointsType point1, PointsType point2) {
+  return point1.first < point2.first;
 }

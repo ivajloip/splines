@@ -107,3 +107,7 @@ PointsType* SplinesCalculator::getResultPoints() {
 
   return splineValues;
 }
+
+int SplinesCalculator::getResultPointsCount() {
+  return _points[_pointsCount].first;
+}
