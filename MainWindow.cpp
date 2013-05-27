@@ -8,11 +8,18 @@
 
 #include <fstream>
 #include <iostream>
+#include <algorithm>
 
 MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
   this->resize(640, 480);
   this->setWindowTitle("Splines approximation");
+
+  createMenu();
   
+  splinesCalculator = NULL;
+}
+
+void MainWindow::createMenu() {
   // Create the menu
   QMenuBar* menubar = menuBar();
   QMenu* file = menubar->addMenu("&File");
@@ -21,8 +28,6 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
   createMenuItem("Save result", NULL, "Ctrl+S", file, SLOT(exportSlot()), this);
   file->addSeparator();
   createMenuItem("Exit", NULL, "Esc", file, SLOT(closeSlot()), this);
-
-  splinesCalculator = NULL;
 }
 
 void MainWindow::createMenuItem(QString label,
@@ -47,42 +52,32 @@ void MainWindow::importSlot() {
       "",
       tr("Files (*.*)"));
 
-  std::ifstream in(fileName.toStdString().c_str());
-
-  if (!in) {
-    // TODO: log error
-    return;
-  }
-
-  std::cout << "Reading file: " << fileName.toStdString() << std::endl;
-
-  int m;
-
-  in >> m;
-  std::cout << m << std::endl;
-  PointsType* points = new PointsType[m];
-
-  for (int i = 0; i < m; i++) {
-    in >> points[i].first;
-    in >> points[i].second;
-    std::cout << points[i].first << points[i].second << std::endl;
-  }
-
   std::cout << std::endl;
 
-  if (splinesCalculator != NULL) {
-    std::cout << "Deleting old instance\n";
+  PointsType* points;
+  int pointsCount;
 
-    delete splinesCalculator;
-  }
+  readPointsFromFile(fileName, points, pointsCount);
 
-  splinesCalculator = new SplinesCalculator(points, m);
+  std::sort(points, points + pointsCount);
 
-  in.close();
+  updateSplinesCalculator(points, pointsCount);
 }
 
 void MainWindow::exportSlot() {
-  int step = QInputDialog::getInt(this, tr("Title"), tr("Label"), 1, 1, 10000);
+  bool ok;
+  int step = QInputDialog::getInt(this,
+      tr("Title"),
+      tr("Please select the step to be used"),
+      1,
+      1,
+      10000,
+      1, 
+      &ok);
+
+  if (!ok) {
+    return;
+  }
 
   QString fileName = QFileDialog::getSaveFileName(this,
       tr("Save File"),
@@ -92,20 +87,78 @@ void MainWindow::exportSlot() {
   std::cout << step << std::endl;
   std::cout << fileName.toStdString().c_str() << std::endl;
 
+  savePointsToFile(fileName, step);
+}
+
+
+void MainWindow::savePointsToFile(QString fileName, int step) {
   std::ofstream out(fileName.toStdString().c_str());
 
   if (!out) {
-    // TODO: log error
+    std::cerr << "Error while saving file: " << fileName.toStdString() <<
+      std::endl;
     return;
   }
 
   int pointsCount = splinesCalculator->getResultPointsCount();
   PointsType* points = splinesCalculator->getResultPoints();
 
-  out << pointsCount << std::endl;
+  out << pointsCount / step << std::endl;
 
   for (int i = 0; i < pointsCount; i += step) {
     out << points[i].first / step << " " << points[i].second << std::endl;
   }
+
   out.close();
+}
+
+
+void MainWindow::readPointsFromFile(QString fileName, PointsType*& points, int& pointsCount) {
+  std::ifstream in(fileName.toStdString().c_str());
+
+  if (!in) {
+    std::cerr << "Error while loading file: " << fileName.toStdString() <<
+      std::endl;
+
+    return;
+  }
+
+  std::cout << "Reading file: " << fileName.toStdString() << std::endl;
+
+  int m;
+  in >> pointsCount;
+  std::cout << pointsCount << std::endl;
+
+  points = new PointsType[m];
+
+  for (int i = 0; i < pointsCount; i++) {
+    in >> points[i].first;
+    in >> points[i].second;
+
+    std::cout << points[i].first << " " << points[i].second << std::endl;
+  }
+
+  in.close();
+
+}
+
+
+void MainWindow::updateSplinesCalculator(PointsType* points, int pointsCount) {
+  if (splinesCalculator != NULL) {
+    std::cout << "Deleting old instance\n";
+
+    delete splinesCalculator;
+  }
+
+  std::cout << "Constructing SplinesCalcualtor with:\n";
+
+  for (int i = 0; i < pointsCount; i++) {
+    std::cout << points[i].first << " " << points[i].second << std::endl;
+  }
+
+  splinesCalculator = new SplinesCalculator(points, pointsCount);
+}
+
+bool cmpPoints(PointsType point1, PointsType point2) {
+  return point1.first < point2.first;
 }

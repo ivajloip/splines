@@ -32,6 +32,8 @@ class SplinesCalculator {
   public: 
     SplinesCalculator(PointsType* points, int pointsCount); 
 
+    SplinesCalculator(std::pair<int, PointsType*>); 
+
     ~SplinesCalculator();
 
     PointsType* getResultPoints();

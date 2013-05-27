@@ -5,6 +5,8 @@
 #include <QMainWindow>
 #include <SplinesCalculator.h>
 
+#include <utility>
+
 class MainWindow : public QMainWindow {
     Q_OBJECT
 
@@ -17,6 +19,16 @@ private:
       QWidget *addTo,
       const char * func,
       QWidget* signalTo);
+
+  void createMenu();
+
+  void readPointsFromFile(QString fileName,
+      PointsType*& points,
+      int& pointsCount);
+
+  void updateSplinesCalculator(PointsType* pointsData, int pointsCount);
+
+  void savePointsToFile(QString fileName, int step = 1); 
 
 public:
   MainWindow(QWidget *parent=0);

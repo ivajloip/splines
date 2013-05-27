@@ -9,4 +9,4 @@ INCLUDEPATH += .
 
 # Input
 HEADERS += MainWindow.h SplinesCalculator.h
-SOURCES += main.cpp MainWindow.cpp moc_SplinesCalculator.cpp
+SOURCES += main.cpp MainWindow.cpp SplinesCalculator.cpp

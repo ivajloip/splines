@@ -4,6 +4,15 @@
 #define POINST_COUNT 10
 
 SplinesCalculator::SplinesCalculator(PointsType* points, int _pointsCount) {
+    std::cout << _pointsCount << std::endl;
+
+    for (int i = 0; i < _pointsCount; i++) {
+      std::cout << points[i].first << " " << points[i].second << std::endl;
+    }
+}
+
+SplinesCalculator::SplinesCalculator(std::pair<int, PointsType*> data) {
+    SplinesCalculator(data.second, data.first); 
 }
 
 SplinesCalculator::~SplinesCalculator() {
