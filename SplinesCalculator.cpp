@@ -53,20 +53,22 @@ void SplinesCalculator::tridiagMatrixAlgorithm(double* lowerDiag,
     double* matrixRightSides) {
   int matrixLen = this->_pointsCount - 1;
   double alfa[matrixLen], beta[matrixLen];
+
   alfa[0] = -(upperDiag[0] / mainDiag[0]);
-  beta[0] = -(matrixRightSides[0] / mainDiag[0]);
+  beta[0] = (matrixRightSides[0] / mainDiag[0]);
 
   for (int k = 1; k <= matrixLen; k++){
     double denominator = lowerDiag[k - 1] * alfa[k - 1] + mainDiag[k];
+    beta[k] = ((matrixRightSides[k] - (lowerDiag[k - 1] * beta[k - 1])) / denominator);
+    if (k == matrixLen)
+      continue;
     alfa[k] = -(upperDiag[k] / denominator);
-    beta[k] = -((alfa[k - 1] - (lowerDiag[k - 1] * beta[k - 1])) / denominator);
   }
 
-  this->derivativeParameters[matrixLen] = alfa[matrixLen];
+  this->derivativeParameters[matrixLen] = beta[matrixLen];
 
-  for (int k = matrixLen - 1; k >= 0; k--){
+  for (int k = matrixLen - 1; k >= 0; k--)
     this->derivativeParameters[k] = alfa[k] * this->derivativeParameters[k + 1] + beta[k];
-  }
 }
 
 double SplinesCalculator::dividedDifference(PointsType* points, int first_point, int second_point) {
