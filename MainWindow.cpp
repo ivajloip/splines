@@ -12,7 +12,13 @@
 MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
   this->resize(640, 480);
   this->setWindowTitle("Splines approximation");
+
+  createMenu();
   
+  splinesCalculator = NULL;
+}
+
+void MainWindow::createMenu() {
   // Create the menu
   QMenuBar* menubar = menuBar();
   QMenu* file = menubar->addMenu("&File");
@@ -21,8 +27,6 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
   createMenuItem("Save result", NULL, "Ctrl+S", file, SLOT(exportSlot()), this);
   file->addSeparator();
   createMenuItem("Exit", NULL, "Esc", file, SLOT(closeSlot()), this);
-
-  splinesCalculator = NULL;
 }
 
 void MainWindow::createMenuItem(QString label,
@@ -47,42 +51,28 @@ void MainWindow::importSlot() {
       "",
       tr("Files (*.*)"));
 
-  std::ifstream in(fileName.toStdString().c_str());
-
-  if (!in) {
-    // TODO: log error
-    return;
-  }
-
-  std::cout << "Reading file: " << fileName.toStdString() << std::endl;
-
-  int m;
-
-  in >> m;
-  std::cout << m << std::endl;
-  PointsType* points = new PointsType[m];
-
-  for (int i = 0; i < m; i++) {
-    in >> points[i].first;
-    in >> points[i].second;
-    std::cout << points[i].first << points[i].second << std::endl;
-  }
-
-  in.close();
-
   std::cout << std::endl;
 
-  if (splinesCalculator != NULL) {
-    std::cout << "Deleting old instance\n";
+  PointsData pointsData;
+  readPointsFromFile(fileName, pointsData);
 
-    delete splinesCalculator;
-  }
-
-  splinesCalculator = new SplinesCalculator(points, m);
+  updateSplinesCalculator(pointsData);
 }
 
 void MainWindow::exportSlot() {
-  int step = QInputDialog::getInt(this, tr("Title"), tr("Label"), 1, 1, 10000);
+  bool ok;
+  int step = QInputDialog::getInt(this,
+      tr("Title"),
+      tr("Please select the step to be used"),
+      1,
+      1,
+      10000,
+      1, 
+      &ok);
+
+  if (!ok) {
+    return;
+  }
 
   QString fileName = QFileDialog::getSaveFileName(this,
       tr("Save File"),
@@ -92,20 +82,71 @@ void MainWindow::exportSlot() {
   std::cout << step << std::endl;
   std::cout << fileName.toStdString().c_str() << std::endl;
 
+  savePointsToFile(fileName, step);
+}
+
+
+void MainWindow::savePointsToFile(QString fileName, int step) {
   std::ofstream out(fileName.toStdString().c_str());
 
   if (!out) {
-    // TODO: log error
+    std::cerr << "Error while saving file: " << fileName.toStdString() <<
+      std::endl;
     return;
   }
 
   int pointsCount = splinesCalculator->getResultPointsCount();
   PointsType* points = splinesCalculator->getResultPoints();
 
-  out << pointsCount << std::endl;
+  out << pointsCount / step << std::endl;
 
   for (int i = 0; i < pointsCount; i += step) {
     out << points[i].first / step << " " << points[i].second << std::endl;
   }
+
   out.close();
+}
+
+
+void MainWindow::readPointsFromFile(QString fileName, PointsData& pointsData) {
+  std::ifstream in(fileName.toStdString().c_str());
+
+  if (!in) {
+    std::cerr << "Error while loading file: " << fileName.toStdString() <<
+      std::endl;
+
+    return;
+  }
+
+  std::cout << "Reading file: " << fileName.toStdString() << std::endl;
+
+  int m;
+  in >> m;
+  std::cout << m << std::endl;
+
+  PointsType* points = new PointsType[m];
+
+  for (int i = 0; i < m; i++) {
+    in >> points[i].first;
+    in >> points[i].second;
+
+    std::cout << points[i].first << " " << points[i].second << std::endl;
+  }
+
+  in.close();
+
+  pointsData.first = m;
+  pointsData.second = points;
+}
+
+
+void MainWindow::updateSplinesCalculator(PointsData pointsData) {
+  if (splinesCalculator != NULL) {
+    std::cout << "Deleting old instance\n";
+
+    delete splinesCalculator;
+  }
+
+  std::cout << "Constructing SplinesCalcualtor\n";
+  splinesCalculator = new SplinesCalculator(pointsData);
 }

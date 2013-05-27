@@ -5,6 +5,10 @@
 #include <QMainWindow>
 #include <SplinesCalculator.h>
 
+#include <utility>
+
+typedef std::pair<int, PointsType*> PointsData;
+
 class MainWindow : public QMainWindow {
     Q_OBJECT
 
@@ -17,6 +21,14 @@ private:
       QWidget *addTo,
       const char * func,
       QWidget* signalTo);
+
+  void createMenu();
+
+  void readPointsFromFile(QString fileName, PointsData& pointsData);
+
+  void updateSplinesCalculator(PointsData pointsData);
+
+  void savePointsToFile(QString fileName, int step = 1); 
 
 public:
   MainWindow(QWidget *parent=0);
