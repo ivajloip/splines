@@ -26,8 +26,7 @@ class SplinesCalculator {
         int second_point);
 
     double spline(int variable,
-        int intervalStart,
-        int intervalEnd);
+        int intervalStart);
 
   public: 
     SplinesCalculator(PointsType* points, int pointsCount); 
