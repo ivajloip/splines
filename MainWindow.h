@@ -12,8 +12,10 @@ class MainWindow : public QMainWindow {
 
 private:
   SplinesCalculator* splinesCalculator;
+
+  QAction* saveAction;
     
-  void createMenuItem(QString label,
+  QAction* createMenuItem(QString label,
       QString iconLocation,
       QString shortCut,
       QWidget *addTo,
@@ -22,13 +24,13 @@ private:
 
   void createMenu();
 
-  void readPointsFromFile(QString fileName,
+  bool readPointsFromFile(QString fileName,
       PointsType*& points,
       int& pointsCount);
 
   void updateSplinesCalculator(PointsType* pointsData, int pointsCount);
 
-  void savePointsToFile(QString fileName, int step = 1); 
+  bool savePointsToFile(QString fileName, int step = 1); 
 
 public:
   MainWindow(QWidget *parent=0);

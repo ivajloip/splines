@@ -25,12 +25,18 @@ void MainWindow::createMenu() {
   QMenu* file = menubar->addMenu("&File");
   createMenuItem("Open file", NULL, "Ctrl+O", file, SLOT(importSlot()), this);
   file->addSeparator();
-  createMenuItem("Save result", NULL, "Ctrl+S", file, SLOT(exportSlot()), this);
+  this->saveAction = createMenuItem("Save result",
+      NULL,
+      "Ctrl+S",
+      file,
+      SLOT(exportSlot()),
+      this);
+  this->saveAction->setEnabled(false);
   file->addSeparator();
   createMenuItem("Exit", NULL, "Esc", file, SLOT(closeSlot()), this);
 }
 
-void MainWindow::createMenuItem(QString label,
+QAction* MainWindow::createMenuItem(QString label,
     QString iconLocation,
     QString shortCut,
     QWidget *addTo,
@@ -40,6 +46,8 @@ void MainWindow::createMenuItem(QString label,
   tmp->setShortcut(shortCut);
   connect(tmp, SIGNAL(triggered()), signalTo, func);
   addTo->addAction(tmp);
+
+  return tmp;
 }
 
 void MainWindow::closeSlot() {
@@ -57,11 +65,17 @@ void MainWindow::importSlot() {
   PointsType* points;
   int pointsCount;
 
-  readPointsFromFile(fileName, points, pointsCount);
+  if (!readPointsFromFile(fileName, points, pointsCount)) {
+    std::cerr << "Failed to read the file\n";
+
+    return;
+  }
 
   std::sort(points, points + pointsCount);
 
   updateSplinesCalculator(points, pointsCount);
+
+  this->saveAction->setEnabled(true);
 }
 
 void MainWindow::exportSlot() {
@@ -91,13 +105,18 @@ void MainWindow::exportSlot() {
 }
 
 
-void MainWindow::savePointsToFile(QString fileName, int step) {
-  std::ofstream out(fileName.toStdString().c_str());
+bool MainWindow::savePointsToFile(QString fileName, int step) {
+  const char* fileNameAsChars = fileName.toStdString().c_str();
+  if (strlen(fileNameAsChars) < 1) {
+    return false;
+  }
+
+  std::ofstream out(fileNameAsChars);
 
   if (!out) {
     std::cerr << "Error while saving file: " << fileName.toStdString() <<
       std::endl;
-    return;
+    return false;
   }
 
   int pointsCount = splinesCalculator->getResultPointsCount();
@@ -110,26 +129,34 @@ void MainWindow::savePointsToFile(QString fileName, int step) {
   }
 
   out.close();
+
+  return true;
 }
 
 
-void MainWindow::readPointsFromFile(QString fileName, PointsType*& points, int& pointsCount) {
-  std::ifstream in(fileName.toStdString().c_str());
+bool MainWindow::readPointsFromFile(QString fileName,
+    PointsType*& points,
+    int& pointsCount) {
+  const char* fileNameAsChars = fileName.toStdString().c_str();
+  if (strlen(fileNameAsChars) < 1) {
+    return false;
+  }
+
+  std::ifstream in(fileNameAsChars);
 
   if (!in) {
     std::cerr << "Error while loading file: " << fileName.toStdString() <<
       std::endl;
 
-    return;
+    return false;
   }
 
   std::cout << "Reading file: " << fileName.toStdString() << std::endl;
 
-  int m;
   in >> pointsCount;
   std::cout << pointsCount << std::endl;
 
-  points = new PointsType[m];
+  points = new PointsType[pointsCount];
 
   for (int i = 0; i < pointsCount; i++) {
     in >> points[i].first;
@@ -140,6 +167,7 @@ void MainWindow::readPointsFromFile(QString fileName, PointsType*& points, int& 
 
   in.close();
 
+  return true;
 }
 
 
