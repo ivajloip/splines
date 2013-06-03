@@ -3,8 +3,11 @@
 #define __splines_calculator_h__
 
 #include <utility>
+#include <boost/rational.hpp>
 
-typedef std::pair<int, float> PointsType;
+typedef boost::rational<int> rational;
+
+typedef std::pair<int, rational> PointsType;
 
 class SplinesCalculator {
   private:
@@ -12,26 +15,24 @@ class SplinesCalculator {
 
     PointsType* _points;
 
-    double* derivativeParameters;
+    rational* derivativeParameters;
 
-    double* mainDiag, *lowerDiag, *upperDiag, *matrixRightSides;
+    rational* mainDiag, *lowerDiag, *upperDiag, *matrixRightSides;
  
-    void tridiagMatrixAlgorithm(double* lowerDiag,
-        double* mainDiag,
-        double* upperDiag,
-        double* matrixRightSides);
+    void tridiagMatrixAlgorithm(rational* lowerDiag,
+        rational* mainDiag,
+        rational* upperDiag,
+        rational* matrixRightSides);
 
-    double dividedDifference(PointsType* points,
+    rational dividedDifference(PointsType* points,
         int first_point,
         int second_point);
 
-    double spline(int variable,
+    rational spline(int variable,
         int intervalStart);
 
   public: 
     SplinesCalculator(PointsType* points, int pointsCount); 
-
-    SplinesCalculator(std::pair<int, PointsType*>); 
 
     ~SplinesCalculator();
 

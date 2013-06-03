@@ -9,6 +9,7 @@
 #include <fstream>
 #include <iostream>
 #include <algorithm>
+#include <boost/rational.hpp>
 
 MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
   this->resize(640, 480);
@@ -119,8 +120,10 @@ bool MainWindow::savePointsToFile(QString fileName, int step) {
     return false;
   }
 
+  std::cout << "Calculating points\n";
   int pointsCount = splinesCalculator->getResultPointsCount();
   PointsType* points = splinesCalculator->getResultPoints();
+  std::cout << "Writing result to file\n";
 
   out << pointsCount / step << std::endl;
 
@@ -133,6 +136,18 @@ bool MainWindow::savePointsToFile(QString fileName, int step) {
   return true;
 }
 
+void helper(double value, PointsType& point) {
+  int intValue;
+  int denuminator = 1;
+  do {
+    denuminator *= 10;
+    intValue = value * denuminator;
+  } while(denuminator * value - intValue > 0.00001);
+
+  std::cout << intValue << " " << value * denuminator << std::endl;
+  point.second = rational(intValue, denuminator);
+  std::cout << boost::rational_cast<double>(point.second) << std::endl;
+}
 
 bool MainWindow::readPointsFromFile(QString fileName,
     PointsType*& points,
@@ -160,16 +175,17 @@ bool MainWindow::readPointsFromFile(QString fileName,
 
   for (int i = 0; i < pointsCount; i++) {
     in >> points[i].first;
-    in >> points[i].second;
+    double tmp;
+    in >> tmp;
+    helper(tmp, points[i]);
 
-    std::cout << points[i].first << " " << points[i].second << std::endl;
+    std::cout << points[i].first << " " << boost::rational_cast<double>(points[i].second) << std::endl;
   }
 
   in.close();
 
   return true;
 }
-
 
 void MainWindow::updateSplinesCalculator(PointsType* points, int pointsCount) {
   if (splinesCalculator != NULL) {
@@ -181,7 +197,7 @@ void MainWindow::updateSplinesCalculator(PointsType* points, int pointsCount) {
   std::cout << "Constructing SplinesCalcualtor with:\n";
 
   for (int i = 0; i < pointsCount; i++) {
-    std::cout << points[i].first << " " << points[i].second << std::endl;
+    std::cout << points[i].first << " " << boost::rational_cast<double>(points[i].second) << std::endl;
   }
 
   splinesCalculator = new SplinesCalculator(points, pointsCount);

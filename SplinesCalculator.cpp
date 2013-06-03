@@ -1,12 +1,12 @@
-#include <SplinesCalculator.h>
+#include "SplinesCalculator.h"
 #include <iostream>
 
 SplinesCalculator::SplinesCalculator(PointsType* points, int pointsCount) {
-  this->upperDiag = new double[pointsCount];
-  this->mainDiag = new double[pointsCount + 1];
-  this->lowerDiag = new double[pointsCount];
-  this->matrixRightSides = new double[pointsCount + 1];
-  this->derivativeParameters = new double[pointsCount + 1];
+  this->upperDiag = new rational[pointsCount];
+  this->mainDiag = new rational[pointsCount + 1];
+  this->lowerDiag = new rational[pointsCount];
+  this->matrixRightSides = new rational[pointsCount + 1];
+  this->derivativeParameters = new rational[pointsCount + 1];
   this->_pointsCount = pointsCount + 1;
   
   this->_points = new PointsType[pointsCount + 1];
@@ -21,13 +21,13 @@ SplinesCalculator::SplinesCalculator(PointsType* points, int pointsCount) {
   for (int i = 0; i < this->_pointsCount; i++)
     this->derivativeParameters[i] = 0;
 
-  double divDiffFirst = this->dividedDifference(this->_points, 1, 0); 
+  rational divDiffFirst = this->dividedDifference(this->_points, 1, 0); 
   this->upperDiag[0] = 1;
   this->mainDiag[0] = 2;
   this->matrixRightSides[0] = 3 * divDiffFirst;
 
   for (int i = 0; i < this->_pointsCount - 2; i++) {
-    double delta, deltaPlus, divDiff, divDiffPlus;
+    rational delta, deltaPlus, divDiff, divDiffPlus;
     divDiff = this->dividedDifference(this->_points, i + 1, i);
     divDiffPlus = this->dividedDifference(this->_points, i + 2, i + 1);
     delta = this->_points[i + 1].first - this->_points[i].first;
@@ -38,7 +38,7 @@ SplinesCalculator::SplinesCalculator(PointsType* points, int pointsCount) {
     this->matrixRightSides[i + 1] = 3 * (divDiffPlus * delta + divDiff * deltaPlus);
   }
 
-  double divDiffLast = this->dividedDifference(points, this->_pointsCount - 1, this->_pointsCount - 2); 
+  rational divDiffLast = this->dividedDifference(points, this->_pointsCount - 1, this->_pointsCount - 2); 
   this->mainDiag[this->_pointsCount - 1] = 2;
   this->lowerDiag[this->_pointsCount - 2] = 1;
   this->matrixRightSides[this->_pointsCount - 1] = 3 * divDiffLast;
@@ -50,50 +50,52 @@ SplinesCalculator::~SplinesCalculator() {
   delete [] this->upperDiag;
   delete [] this->lowerDiag;
   delete [] this->matrixRightSides;
+  delete [] this->derivativeParameters;
 }
 
-void SplinesCalculator::tridiagMatrixAlgorithm(double* lowerDiag, 
-    double* mainDiag, 
-    double* upperDiag,
-    double* matrixRightSides) {
+void SplinesCalculator::tridiagMatrixAlgorithm(rational* lowerDiag, 
+    rational* mainDiag, 
+    rational* upperDiag,
+    rational* matrixRightSides) {
   int matrixLen = this->_pointsCount - 1;
-  double alfa[matrixLen], beta[matrixLen];
+  rational alfa[matrixLen], beta[matrixLen + 1];
 
   alfa[0] = -(upperDiag[0] / mainDiag[0]);
   beta[0] = (matrixRightSides[0] / mainDiag[0]);
 
   for (int k = 1; k <= matrixLen; k++) {
-    double denominator = lowerDiag[k - 1] * alfa[k - 1] + mainDiag[k];
+    rational denominator = lowerDiag[k - 1] * alfa[k - 1] + mainDiag[k];
     beta[k] = ((matrixRightSides[k] - (lowerDiag[k - 1] * beta[k - 1])) / denominator);
     if (k == matrixLen)
       continue;
     alfa[k] = -(upperDiag[k] / denominator);
   }
-
+  
   this->derivativeParameters[matrixLen] = beta[matrixLen];
 
   for (int k = matrixLen - 1; k >= 0; k--)
     this->derivativeParameters[k] = alfa[k] * this->derivativeParameters[k + 1] + beta[k];
 }
 
-double SplinesCalculator::dividedDifference(PointsType* points, int first_point, int second_point) {
-  double divDiff = (points[first_point].second - points[second_point].second) /
+rational SplinesCalculator::dividedDifference(PointsType* points, int first_point, int second_point) {
+  rational divDiff = (points[first_point].second - points[second_point].second) /
     (points[first_point].first - points[second_point].first);
   
   return divDiff;
 }
 
-double SplinesCalculator::spline(int variable, int intervalStart) {
-  double divDiff = this->dividedDifference(this->_points, intervalStart + 1, intervalStart);
-  int intervalLength = this->_points[intervalStart].first - this->_points[intervalStart + 1].first;
-  double constantA = (divDiff - this->derivativeParameters[intervalStart]) / intervalLength;
-  double constantB = (this->derivativeParameters[intervalStart] - 2 * divDiff +
+rational SplinesCalculator::spline(int variable, int intervalStart) {
+  rational divDiff = this->dividedDifference(this->_points, intervalStart + 1, intervalStart);
+  int intervalLength = this->_points[intervalStart + 1].first - this->_points[intervalStart].first;
+  rational constantA = (divDiff - this->derivativeParameters[intervalStart]) / intervalLength;
+  rational constantB = (this->derivativeParameters[intervalStart] - 2 * divDiff +
       this->derivativeParameters[intervalStart + 1]) / (intervalLength * intervalLength);
-  double distanceToStart = variable - this->_points[intervalStart].first;
-  double splineFormula = this->_points[intervalStart].second +
+  rational distanceToStart = variable - this->_points[intervalStart].first;
+  rational distanceToEnd = variable - this->_points[intervalStart + 1].first; 
+  rational splineFormula = this->_points[intervalStart].second +
       this->derivativeParameters[intervalStart] * distanceToStart +
       constantA * distanceToStart * distanceToStart +
-      constantB * distanceToStart * distanceToStart * (variable - this->_points[intervalStart + 1].first);
+      constantB * distanceToStart * distanceToStart * distanceToEnd;
   
   return splineFormula;
 }
@@ -101,17 +103,18 @@ double SplinesCalculator::spline(int variable, int intervalStart) {
 PointsType* SplinesCalculator::getResultPoints() {
   PointsType* splineValues = new PointsType[this->getResultPointsCount()];
   int number = 0;
+
+  this->tridiagMatrixAlgorithm(this->lowerDiag, this->mainDiag, this->upperDiag, this->matrixRightSides);
+
   while (number <= this->getResultPointsCount() - 1) {
     for (int i = 0; i < this->_pointsCount - 1; i++)
-      if ((number >= this->_points[i].first) && (number <= this->_points[i + 1].first) || number == this->getResultPointsCount() - 1) {
-        this->tridiagMatrixAlgorithm(this->lowerDiag, this->mainDiag, this->upperDiag, this->matrixRightSides);
+      if ((number >= this->_points[i].first) && (number <= this->_points[i + 1].first)) {
         splineValues[number].first = number;
         splineValues[number].second = this->spline(number, i);
       }
     number++;
   }
-    
-
+     
   return splineValues;
 }
 
