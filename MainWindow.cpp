@@ -128,7 +128,7 @@ bool MainWindow::savePointsToFile(QString fileName, int step) {
   out << pointsCount / step << std::endl;
 
   for (int i = 0; i < pointsCount; i += step) {
-    out << points[i].first / step << " " << points[i].second << std::endl;
+    out << points[i].first / step << " " << boost::rational_cast<double>(points[i].second) << std::endl;
   }
 
   out.close();
