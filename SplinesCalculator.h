@@ -3,9 +3,8 @@
 #define __splines_calculator_h__
 
 #include <utility>
-#include <boost/rational.hpp>
 
-typedef boost::rational<int> rational;
+typedef long double rational;
 
 typedef std::pair<int, rational> PointsType;
 
@@ -39,6 +38,8 @@ class SplinesCalculator {
     PointsType* getResultPoints();
 
     int getResultPointsCount();
+
+    long double errorCalculation();                                                                       
 };
 
 #endif

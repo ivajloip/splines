@@ -9,7 +9,6 @@
 #include <fstream>
 #include <iostream>
 #include <algorithm>
-#include <boost/rational.hpp>
 
 MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
   this->resize(640, 480);
@@ -128,25 +127,21 @@ bool MainWindow::savePointsToFile(QString fileName, int step) {
   out << pointsCount / step << std::endl;
 
   for (int i = 0; i < pointsCount; i += step) {
-    out << points[i].first / step << " " << boost::rational_cast<double>(points[i].second) << std::endl;
+    out << points[i].first / step << " " << points[i].second << std::endl;
   }
 
   out.close();
 
+  writeLog();
+
   return true;
 }
 
-void helper(double value, PointsType& point) {
-  int intValue;
-  int denuminator = 1;
-  do {
-    denuminator *= 10;
-    intValue = value * denuminator;
-  } while(denuminator * value - intValue > 0.00001);
+void MainWindow::writeLog() {
+  std::ofstream out("log.log", std::ofstream::out | std::ofstream::app);
+  out << splinesCalculator->errorCalculation() << std::endl;
 
-  std::cout << intValue << " " << value * denuminator << std::endl;
-  point.second = rational(intValue, denuminator);
-  std::cout << boost::rational_cast<double>(point.second) << std::endl;
+  out.close();
 }
 
 bool MainWindow::readPointsFromFile(QString fileName,
@@ -175,11 +170,9 @@ bool MainWindow::readPointsFromFile(QString fileName,
 
   for (int i = 0; i < pointsCount; i++) {
     in >> points[i].first;
-    double tmp;
-    in >> tmp;
-    helper(tmp, points[i]);
+    in >> points[i].second;
 
-    std::cout << points[i].first << " " << boost::rational_cast<double>(points[i].second) << std::endl;
+    std::cout << points[i].first << " " << points[i].second << std::endl;
   }
 
   in.close();
@@ -197,7 +190,7 @@ void MainWindow::updateSplinesCalculator(PointsType* points, int pointsCount) {
   std::cout << "Constructing SplinesCalcualtor with:\n";
 
   for (int i = 0; i < pointsCount; i++) {
-    std::cout << points[i].first << " " << boost::rational_cast<double>(points[i].second) << std::endl;
+    std::cout << points[i].first << " " << points[i].second << std::endl;
   }
 
   splinesCalculator = new SplinesCalculator(points, pointsCount);

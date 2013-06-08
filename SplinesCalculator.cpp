@@ -1,5 +1,6 @@
 #include "SplinesCalculator.h"
 #include <iostream>
+#include <cmath>
 
 SplinesCalculator::SplinesCalculator(PointsType* points, int pointsCount) {
   std::cout << "Larido2\n";
@@ -47,6 +48,28 @@ SplinesCalculator::SplinesCalculator(PointsType* points, int pointsCount) {
   std::cout << divDiffLast << std::endl;
   std::cout << divDiffLast << std::endl;
 }
+
+long double SplinesCalculator::errorCalculation() {                                                                       
+  long double* calculatedRigthSides = new long double[this->_pointsCount];                                               
+  calculatedRigthSides[0] = this->mainDiag[0] * this->derivativeParameters[0] + this->upperDiag[0] * this->derivativeParameters[1];                                                                                                               
+  for (int i = 1; i <= this->_pointsCount - 2; i++)                                                                           
+    calculatedRigthSides[i] = this->lowerDiag[i - 1] * this->derivativeParameters[i - 1]
+        + this->mainDiag[i] * this->derivativeParameters[i]
+        + this->upperDiag[i] * this->derivativeParameters[i + 1];                                            
+
+  calculatedRigthSides[this->_pointsCount - 1] = this->lowerDiag[this->_pointsCount - 2] * this->derivativeParameters[this->_pointsCount - 2]
+      + this->mainDiag[this->_pointsCount - 1] * this->derivativeParameters[this->_pointsCount - 1];
+
+  long double error = 0;                                                                                                 
+
+  for (int i = 0; i < this->_pointsCount; i++) {                                                                         
+    long double stepError = (this->matrixRightSides[i] - calculatedRigthSides[i])
+        / this->matrixRightSides[i];               
+    error += fabs(stepError);                                                                                             
+  }                                                                                                                      
+                                                                                                                           
+  return error;                                                                                                          
+}  
 
 SplinesCalculator::~SplinesCalculator() {
   delete [] this->_points;

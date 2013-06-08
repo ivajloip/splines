@@ -32,6 +32,8 @@ private:
 
   bool savePointsToFile(QString fileName, int step = 1); 
 
+  void writeLog();
+
 public:
   MainWindow(QWidget *parent=0);
 
