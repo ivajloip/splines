@@ -11,6 +11,7 @@
 #include "LineEdit.h"
 
 #define MAX_POINTS_COUNT 20
+#define MAX_FILENAME_LENGTH 2048
 
 class MainWindow : public QMainWindow {
     Q_OBJECT
@@ -40,7 +41,10 @@ private:
 
   void updateSplinesCalculator(PointsType* pointsData, int pointsCount);
 
-  bool savePointsToFile(QString fileName, int step = 1); 
+  bool savePointsToFile(QString fileName,
+      int step = 1,
+      int type = 1,
+      int pointsOnLine = 1); 
 
   void writeLog();
 

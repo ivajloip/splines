@@ -17,6 +17,7 @@
 #include <fstream>
 #include <iostream>
 #include <algorithm>
+#include <locale>
 
 MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
   this->resize(640, 480);
@@ -166,6 +167,28 @@ void MainWindow::exportSlot() {
     return;
   }
 
+  if(!savePointsToFile(fileName, step, 2)) {
+    QMessageBox::critical(this,
+        tr("Error"), 
+        tr("Failed to save the points, please check the log for more information"));
+
+    std::cerr << "Failed to save the file\n";
+
+    return;
+  }
+
+  if(!savePointsToFile(fileName, step, 2, 4)) {
+    QMessageBox::critical(this,
+        tr("Error"), 
+        tr("Failed to save the points, please check the log for more information"));
+
+    std::cerr << "Failed to save the file\n";
+
+    return;
+  }
+
+  writeLog();
+
   QMessageBox::information(this, tr("Notice"), tr("Saved!"));
 }
 
@@ -192,13 +215,21 @@ int MainWindow::findBiggestNonZero() {
   return i;
 }
 
-bool MainWindow::savePointsToFile(QString fileName, int step) {
+bool MainWindow::savePointsToFile(QString fileName,
+    int step,
+    int type,
+    int pointsOnLine) {
+  char newFileName[MAX_FILENAME_LENGTH];
   const char* fileNameAsChars = fileName.toStdString().c_str();
   if (strlen(fileNameAsChars) < 1) {
     return false;
   }
 
-  std::ofstream out(fileNameAsChars);
+  snprintf(newFileName, MAX_FILENAME_LENGTH, "%s%s%s\0", fileNameAsChars, 
+      (pointsOnLine != 1) ? "short" : "", (type != 1) ? ".html" : "");
+
+  std::locale::global(std::locale(""));
+  std::wofstream out(newFileName);
 
   if (!out) {
     QMessageBox::critical(this,
@@ -215,16 +246,45 @@ bool MainWindow::savePointsToFile(QString fileName, int step) {
   PointsType* points = splinesCalculator->getResultPoints();
   std::cout << "Writing result to file\n";
 
-  out << pointsCount / step << std::endl;
+  if (type == 1) {
+    out << pointsCount / step << std::endl;
+  } else {
+    out << "<!DOCTYPE html PUBLIC \"-//W3C//DTD HTML 4.0 Transitional//EN\">\n";
+    out << "<html><head>\n";
+    out << "<meta http-equiv=\"Content-Type\" content=\"text/html;charset=UTF-8\">\n";
+    out << "<title> Denev & co table</title>\n";
+    out << "</head>\n<body>\n<center>\n";
+    out << "<table border>\n";
+    out << "<tr>\n";
+
+    for (int j = 0; j < pointsOnLine; j++) {
+      wchar_t tmp[] = L"литри";
+      out << "<th>cm</th><th>" << tmp << "</th>\n";
+    }
+
+    out << "</tr>\n";
+  }
 
   for (int i = 0; i < pointsCount; i += step) {
-    out << points[i].first / step << " " << points[i].second << std::endl;
+    if (type == 1) {
+      out << points[i].first / step << " " << points[i].second << std::endl;
+    } else if (type == 2) {
+      out << "<tr>\n";
+
+      for (int j = 0; j < pointsOnLine && i + (j * step) < pointsCount; j++) {
+        out << "<td align=\"right\">" << points[i + (j * step)].first / step
+            << "</td><td align=\"right\">"
+            << points[i + (j * step)].second << "</td>\n";
+      }
+      
+      i += pointsOnLine - step;
+
+      out << "</tr>\n";
+    }
   }
 
   out.close();
-
-  writeLog();
-
+  
   return true;
 }
 
