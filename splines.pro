@@ -8,5 +8,5 @@ DEPENDPATH += .
 INCLUDEPATH += .
 
 # Input
-HEADERS += MainWindow.h SplinesCalculator.h
-SOURCES += main.cpp MainWindow.cpp SplinesCalculator.cpp
+HEADERS += MainWindow.h SplinesCalculator.h LineEdit.h
+SOURCES += main.cpp MainWindow.cpp SplinesCalculator.cpp LineEdit.cpp

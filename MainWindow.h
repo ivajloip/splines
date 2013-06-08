@@ -3,17 +3,27 @@
 #define __main_window_h__
 
 #include <QMainWindow>
+#include <QFormLayout>
 #include <SplinesCalculator.h>
 
 #include <utility>
+
+#include "LineEdit.h"
+
+#define MAX_POINTS_COUNT 20
 
 class MainWindow : public QMainWindow {
     Q_OBJECT
 
 private:
   SplinesCalculator* splinesCalculator;
+  PointsType* _points;
+  LineEdit* positions;
+  LineEdit* values;
 
   QAction* saveAction;
+
+  void createInputs(QFormLayout* layout);
     
   QAction* createMenuItem(QString label,
       QString iconLocation,
@@ -34,6 +44,10 @@ private:
 
   void writeLog();
 
+  int findBiggestNonZero();
+
+  void updateInputs();
+
 public:
   MainWindow(QWidget *parent=0);
 
@@ -41,6 +55,7 @@ protected slots:
   void importSlot();
   void exportSlot();
   void closeSlot();
+  void pointUpdatedSlot(int index, int type);
 };
 
 #endif
