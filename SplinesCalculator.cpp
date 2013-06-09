@@ -3,7 +3,6 @@
 #include <cmath>
 
 SplinesCalculator::SplinesCalculator(PointsType* points, int pointsCount) {
-  std::cout << "Larido2\n";
   this->upperDiag = new rational[pointsCount];
   this->mainDiag = new rational[pointsCount + 1];
   this->lowerDiag = new rational[pointsCount];
@@ -44,9 +43,6 @@ SplinesCalculator::SplinesCalculator(PointsType* points, int pointsCount) {
   this->mainDiag[this->_pointsCount - 1] = 2;
   this->lowerDiag[this->_pointsCount - 2] = 1;
   this->matrixRightSides[this->_pointsCount - 1] = 3 * divDiffLast;
-  std::cout << _points[this->_pointsCount - 1].second << " " << _points[this->_pointsCount - 2].second << std::endl;
-  std::cout << divDiffLast << std::endl;
-  std::cout << divDiffLast << std::endl;
 }
 
 long double SplinesCalculator::errorCalculation() {                                                                       
@@ -102,8 +98,6 @@ void SplinesCalculator::tridiagMatrixAlgorithm(rational* lowerDiag,
 
   for (int k = matrixLen - 1; k >= 0; k--)
     this->derivativeParameters[k] = alfa[k] * this->derivativeParameters[k + 1] + beta[k];
-
-  std::cout << "Larido1\n";
 }
 
 rational SplinesCalculator::dividedDifference(PointsType* points, int first_point, int second_point) {
@@ -114,16 +108,13 @@ rational SplinesCalculator::dividedDifference(PointsType* points, int first_poin
 }
 
 rational SplinesCalculator::spline(int variable, int intervalStart) {
-  std::cout << "Larodi8\n";
   rational divDiff = this->dividedDifference(this->_points, intervalStart + 1, intervalStart);
   int intervalLength = this->_points[intervalStart + 1].first - this->_points[intervalStart].first;
   rational constantA = (divDiff - this->derivativeParameters[intervalStart]) / intervalLength;
-  std::cout << "Larodi8.5\n";
-  std::cout << intervalStart << std::endl;
-  std::cout << this->derivativeParameters[intervalStart] << std::endl;
+
   rational constantB = (this->derivativeParameters[intervalStart] - 2 * divDiff +
       this->derivativeParameters[intervalStart + 1]) / (intervalLength * intervalLength);
-  std::cout << "Larodi9\n";
+
   rational distanceToStart = variable - this->_points[intervalStart].first;
   rational distanceToEnd = variable - this->_points[intervalStart + 1].first; 
   rational splineFormula = this->_points[intervalStart].second +
@@ -131,30 +122,24 @@ rational SplinesCalculator::spline(int variable, int intervalStart) {
       constantA * distanceToStart * distanceToStart +
       constantB * distanceToStart * distanceToStart * distanceToEnd;
   
-  std::cout << "Larodi10\n";
   return splineFormula;
 }
 
 PointsType* SplinesCalculator::getResultPoints() {
-  std::cout << "Larodi4\n";
   PointsType* splineValues = new PointsType[this->getResultPointsCount()];
   int number = 0;
 
   this->tridiagMatrixAlgorithm(this->lowerDiag, this->mainDiag, this->upperDiag, this->matrixRightSides);
 
-
-  std::cout << "Larodi5\n";
   while (number <= this->getResultPointsCount() - 1) {
     for (int i = 0; i < this->_pointsCount - 1; i++)
       if ((number >= this->_points[i].first) && (number <= this->_points[i + 1].first)) {
         splineValues[number].first = number;
 
-        std::cout << "Larodi6\n";
         splineValues[number].second = this->spline(number, i);
       }
     number++;
   }
-  std::cout << "Larodi7\n";
      
   return splineValues;
 }

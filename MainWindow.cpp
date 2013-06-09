@@ -229,7 +229,7 @@ bool MainWindow::savePointsToFile(QString fileName,
       (pointsOnLine != 1) ? "short" : "", (type != 1) ? ".html" : "");
 
   std::locale::global(std::locale(""));
-  std::wofstream out(newFileName);
+  std::ofstream out(newFileName);
 
   if (!out) {
     QMessageBox::critical(this,
@@ -258,8 +258,8 @@ bool MainWindow::savePointsToFile(QString fileName,
     out << "<tr>\n";
 
     for (int j = 0; j < pointsOnLine; j++) {
-      wchar_t tmp[] = L"литри";
-      out << "<th>cm</th><th>" << tmp << "</th>\n";
+//      wchar_t tmp[] = L"литри";
+      out << "<th>cm</th><th>" << "liters" << "</th>\n";
     }
 
     out << "</tr>\n";
@@ -303,6 +303,11 @@ bool MainWindow::readPointsFromFile(QString fileName,
     return false;
   }
 
+  for (int i = 0; i < MAX_POINTS_COUNT; i++) {
+      points[i].first = 0;
+      points[i].second = 0.0;
+  }
+
   std::ifstream in(fileNameAsChars);
 
   if (!in) {
@@ -325,6 +330,12 @@ bool MainWindow::readPointsFromFile(QString fileName,
   }
 
   in.close();
+
+  std::cout << "Points read\n";
+
+  for (int i = 0; i < pointsCount; i++) {
+      std::cout << points[i].first << " " << points[i].second << std::endl;
+  }
 
   return true;
 }
@@ -352,12 +363,18 @@ bool cmpPoints(PointsType point1, PointsType point2) {
 void MainWindow::updateInputs() {
   char tmp[16];
 
+  std::cout << "Updating inputs" << std::endl;
+
   for (int i = 0; i < MAX_POINTS_COUNT; i++) {
     snprintf(tmp, 16, "%d", _points[i].first);
+
+    std::cout << _points[i].first << " ";
 
     positions[i].setText(tmp);
 
     snprintf(tmp, 16, "%.3Lf", _points[i].second);
+
+    std::cout << _points[i].second << std::endl;
 
     values[i].setText(tmp);
   }
