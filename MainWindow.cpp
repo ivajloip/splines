@@ -13,6 +13,7 @@
 #include <QIntValidator>
 #include <QDoubleValidator>
 #include <QLabel>
+#include <QVariant>
 
 #include <fstream>
 #include <iostream>
@@ -39,6 +40,14 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
   QFormLayout *layout = new QFormLayout;
   tmp->setLayout(layout);
   layout->setSizeConstraint(QLayout::SetMinimumSize);
+
+  outFileNameInput = new QLineEdit();
+  layout->addRow(tr("File"), outFileNameInput);
+
+  stepInput = new QComboBox();
+  stepInput->addItem(tr("mm"), QVariant(1));
+  stepInput->addItem(tr("cm"), QVariant(10));
+  layout->addRow(tr("Measure"), stepInput);
 
   QLabel *label = new QLabel(tr("Y"));
   layout->addRow(tr("X"), label);
@@ -133,31 +142,23 @@ void MainWindow::importSlot() {
 }
 
 void MainWindow::exportSlot() {
-  bool ok;
-  int step = QInputDialog::getInt(this,
-      tr("Title"),
-      tr("Please select the step to be used"),
-      1,
-      1,
-      10000,
-      1, 
-      &ok);
+  int currentIndex = stepInput->currentIndex();
+  int step = stepInput->itemData(currentIndex).toInt();
 
-  if (!ok) {
-    return;
-  }
-
-  QString fileName = QFileDialog::getSaveFileName(this,
-      tr("Save File"),
-      "",
-      tr("Files (*.*)"));
+  QString fileName = outFileNameInput->text();
 
   std::cout << step << std::endl;
   std::cout << fileName.toStdString().c_str() << std::endl;
 
-  updateSplinesCalculator(_points, findBiggestNonZero());
+  int _pointsCount = findBiggestNonZero();
 
-  if(!savePointsToFile(fileName, step)) {
+  updateSplinesCalculator(_points, _pointsCount);
+
+  std::cout << "Calculating points\n";
+  int pointsCount = splinesCalculator->getResultPointsCount();
+  PointsType* points = splinesCalculator->getResultPoints();
+
+  if(!savePointsToFile(fileName, points, pointsCount, step)) {
     QMessageBox::critical(this,
         tr("Error"), 
         tr("Failed to save the points, please check the log for more information"));
@@ -167,7 +168,7 @@ void MainWindow::exportSlot() {
     return;
   }
 
-  if(!savePointsToFile(fileName, step, 2)) {
+  if(!savePointsToFile(fileName,points, pointsCount,  step, 2)) {
     QMessageBox::critical(this,
         tr("Error"), 
         tr("Failed to save the points, please check the log for more information"));
@@ -177,7 +178,17 @@ void MainWindow::exportSlot() {
     return;
   }
 
-  if(!savePointsToFile(fileName, step, 2, 4)) {
+  if(!savePointsToFile(fileName, points, pointsCount, step, 2, 4)) {
+    QMessageBox::critical(this,
+        tr("Error"), 
+        tr("Failed to save the points, please check the log for more information"));
+
+    std::cerr << "Failed to save the file\n";
+
+    return;
+  }
+
+  if(!savePointsToFile(fileName, _points, _pointsCount, step, 3)) {
     QMessageBox::critical(this,
         tr("Error"), 
         tr("Failed to save the points, please check the log for more information"));
@@ -216,17 +227,30 @@ int MainWindow::findBiggestNonZero() {
 }
 
 bool MainWindow::savePointsToFile(QString fileName,
+    PointsType* points,
+    int pointsCount,
     int step,
     int type,
     int pointsOnLine) {
   char newFileName[MAX_FILENAME_LENGTH];
+  char *suffix;
   const char* fileNameAsChars = fileName.toStdString().c_str();
   if (strlen(fileNameAsChars) < 1) {
     return false;
   }
 
-  snprintf(newFileName, MAX_FILENAME_LENGTH, "%s%s%s\0", fileNameAsChars, 
-      (pointsOnLine != 1) ? "short" : "", (type != 1) ? ".html" : "");
+  if (type == 1) {
+    suffix = ((char *)"out");
+  } else if (type == 3) {
+    suffix = ((char *)"in");
+  } else if (pointsOnLine == 1) {
+    suffix = ((char *)"1col");
+  } else {
+    suffix = ((char *)"4col");
+  }
+
+  snprintf(newFileName, MAX_FILENAME_LENGTH, "%s_%s.%s\0", fileNameAsChars, 
+      suffix, ((type & 1) == 0) ? "html" : "txt");
 
   std::locale::global(std::locale(""));
   std::ofstream out(newFileName);
@@ -241,13 +265,15 @@ bool MainWindow::savePointsToFile(QString fileName,
     return false;
   }
 
-  std::cout << "Calculating points\n";
-  int pointsCount = splinesCalculator->getResultPointsCount();
-  PointsType* points = splinesCalculator->getResultPoints();
   std::cout << "Writing result to file\n";
 
-  if (type == 1) {
-    out << pointsCount / step << std::endl;
+  // we want all the input points, no matter what
+  if (type == 3) {
+    step = 1;
+  }
+
+  if ((type & 1) == 1) {
+    out << (pointsCount + step - 1) / step << std::endl;
   } else {
     out << "<!DOCTYPE html PUBLIC \"-//W3C//DTD HTML 4.0 Transitional//EN\">\n";
     out << "<html><head>\n";
@@ -258,26 +284,34 @@ bool MainWindow::savePointsToFile(QString fileName,
     out << "<tr>\n";
 
     for (int j = 0; j < pointsOnLine; j++) {
-//      wchar_t tmp[] = L"литри";
-      out << "<th>cm</th><th>" << "liters" << "</th>\n";
+      out << "<th>" << ((step == 10) ? "cm" : "mm") << "</th><th>" << "liters"
+          << "</th>\n";
     }
 
     out << "</tr>\n";
   }
 
   for (int i = 0; i < pointsCount; i += step) {
-    if (type == 1) {
+    if ((type & 1) == 1) {
       out << points[i].first / step << " " << points[i].second << std::endl;
     } else if (type == 2) {
       out << "<tr>\n";
 
-      for (int j = 0; j < pointsOnLine && i + (j * step) < pointsCount; j++) {
+      int j;
+
+      for (j = 0; j < pointsOnLine && i + (j * step) < pointsCount; j++) {
         out << "<td align=\"right\">" << points[i + (j * step)].first / step
             << "</td><td align=\"right\">"
-            << points[i + (j * step)].second << "</td>\n";
+            << long(points[i + (j * step)].second) << "</td>\n";
       }
       
-      i += pointsOnLine - step;
+      for (; j < pointsOnLine; j++) {
+        out << "<td align=\"right\">&nbsp;</td><td align=\"right\">"
+            << "&nbsp;</td>\n";
+      }
+
+      
+      i += (pointsOnLine * step) - step;
 
       out << "</tr>\n";
     }

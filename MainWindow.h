@@ -5,6 +5,8 @@
 #include <QMainWindow>
 #include <QFormLayout>
 #include <SplinesCalculator.h>
+#include <QComboBox>
+#include <QLineEdit>
 
 #include <utility>
 
@@ -21,6 +23,8 @@ private:
   PointsType* _points;
   LineEdit* positions;
   LineEdit* values;
+  QLineEdit* outFileNameInput;
+  QComboBox* stepInput;
 
   QAction* saveAction;
 
@@ -42,6 +46,8 @@ private:
   void updateSplinesCalculator(PointsType* pointsData, int pointsCount);
 
   bool savePointsToFile(QString fileName,
+      PointsType* points,
+      int pointsCount,
       int step = 1,
       int type = 1,
       int pointsOnLine = 1); 
