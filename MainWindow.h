@@ -12,7 +12,7 @@
 
 #include "LineEdit.h"
 
-#define MAX_POINTS_COUNT 20
+#define MAX_POINTS_COUNT 30
 #define MAX_FILENAME_LENGTH 2048
 
 class MainWindow : public QMainWindow {
@@ -25,6 +25,7 @@ private:
   LineEdit* values;
   QLineEdit* outFileNameInput;
   QComboBox* stepInput;
+  QComboBox* inputStepInput;
 
   QAction* saveAction;
 
@@ -41,7 +42,8 @@ private:
 
   bool readPointsFromFile(QString fileName,
       PointsType*& points,
-      int& pointsCount);
+      int& pointsCount,
+      int inputTableStep);
 
   void updateSplinesCalculator(PointsType* pointsData, int pointsCount);
 
@@ -57,6 +59,11 @@ private:
   int findBiggestNonZero();
 
   void updateInputs();
+
+  void getDirectoryForFile(QString fileName, QString &dir);
+
+  bool directoryIsOk(QString dir);
+
 
 public:
   MainWindow(QWidget *parent=0);

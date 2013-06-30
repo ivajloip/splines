@@ -14,6 +14,7 @@
 #include <QDoubleValidator>
 #include <QLabel>
 #include <QVariant>
+#include <QFile>
 
 #include <fstream>
 #include <iostream>
@@ -21,7 +22,7 @@
 #include <locale>
 
 MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
-  this->resize(640, 480);
+  this->resize(450, 480);
   this->setWindowTitle("Splines approximation");
 
   createMenu();
@@ -43,6 +44,11 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
 
   outFileNameInput = new QLineEdit();
   layout->addRow(tr("File"), outFileNameInput);
+
+  inputStepInput = new QComboBox();
+  inputStepInput->addItem(tr("mm"), QVariant(1));
+  inputStepInput->addItem(tr("cm"), QVariant(10));
+  layout->addRow(tr("Input Measure"), inputStepInput);
 
   stepInput = new QComboBox();
   stepInput->addItem(tr("mm"), QVariant(1));
@@ -81,10 +87,10 @@ void MainWindow::createInputs(QFormLayout* layout) {
 void MainWindow::createMenu() {
   // Create the menu
   QMenuBar* menubar = menuBar();
-  QMenu* file = menubar->addMenu("&File");
-  createMenuItem("Open file", NULL, "Ctrl+O", file, SLOT(importSlot()), this);
+  QMenu* file = menubar->addMenu(tr("&File"));
+  createMenuItem(tr("Open file"), NULL, "Ctrl+O", file, SLOT(importSlot()), this);
   file->addSeparator();
-  this->saveAction = createMenuItem("Save result",
+  this->saveAction = createMenuItem(tr("Save result"),
       NULL,
       "Ctrl+S",
       file,
@@ -92,7 +98,7 @@ void MainWindow::createMenu() {
       this);
   this->saveAction->setEnabled(false);
   file->addSeparator();
-  createMenuItem("Exit", NULL, "Esc", file, SLOT(closeSlot()), this);
+  createMenuItem(tr("Exit"), NULL, "Esc", file, SLOT(closeSlot()), this);
 }
 
 QAction* MainWindow::createMenuItem(QString label,
@@ -121,9 +127,15 @@ void MainWindow::importSlot() {
 
   std::cout << std::endl;
 
-  int pointsCount;
+  if (fileName.isEmpty()) {
+    return;
+  }
 
-  if (!readPointsFromFile(fileName, _points, pointsCount)) {
+  int pointsCount;
+  int currentInputIndex = inputStepInput->currentIndex();
+  int inputTableStep = stepInput->itemData(currentInputIndex).toInt();
+
+  if (!readPointsFromFile(fileName, _points, pointsCount, inputTableStep)) {
     QMessageBox::critical(this,
         tr("Error"), 
         tr("Failed to read the points, please check the log for more information"));
@@ -158,40 +170,51 @@ void MainWindow::exportSlot() {
   int pointsCount = splinesCalculator->getResultPointsCount();
   PointsType* points = splinesCalculator->getResultPoints();
 
-  if(!savePointsToFile(fileName, points, pointsCount, step)) {
+  QString dir; 
+  getDirectoryForFile(fileName, dir);
+
+  if (!directoryIsOk(dir)) {
+    QMessageBox::critical(this,
+        tr("Error"),
+        tr("%1 does not exist, please choose a directory that exists").arg(dir));
+
+    return;
+  }
+
+  if (!savePointsToFile(fileName, points, pointsCount, step)) {
     QMessageBox::critical(this,
         tr("Error"), 
-        tr("Failed to save the points, please check the log for more information"));
+        tr("Failed to write the file, maybe you don't have permissions"));
 
     std::cerr << "Failed to save the file\n";
 
     return;
   }
 
-  if(!savePointsToFile(fileName,points, pointsCount,  step, 2)) {
+  if (!savePointsToFile(fileName,points, pointsCount,  step, 2)) {
     QMessageBox::critical(this,
         tr("Error"), 
-        tr("Failed to save the points, please check the log for more information"));
+        tr("Failed to write the file, maybe you don't have permissions"));
 
     std::cerr << "Failed to save the file\n";
 
     return;
   }
 
-  if(!savePointsToFile(fileName, points, pointsCount, step, 2, 4)) {
+  if (!savePointsToFile(fileName, points, pointsCount, step, 2, 4)) {
     QMessageBox::critical(this,
         tr("Error"), 
-        tr("Failed to save the points, please check the log for more information"));
+        tr("Failed to write the file, maybe you don't have permissions"));
 
     std::cerr << "Failed to save the file\n";
 
     return;
   }
 
-  if(!savePointsToFile(fileName, _points, _pointsCount, step, 3)) {
+  if (!savePointsToFile(fileName, _points, _pointsCount, step, 3)) {
     QMessageBox::critical(this,
         tr("Error"), 
-        tr("Failed to save the points, please check the log for more information"));
+        tr("Failed to write the file, maybe you don't have permissions"));
 
     std::cerr << "Failed to save the file\n";
 
@@ -201,6 +224,35 @@ void MainWindow::exportSlot() {
   writeLog();
 
   QMessageBox::information(this, tr("Notice"), tr("Saved!"));
+}
+
+
+void MainWindow::getDirectoryForFile(QString fileName, QString &dir) {
+  int lastSeparator = fileName.lastIndexOf("/");
+  if (lastSeparator == -1) {
+    lastSeparator = fileName.lastIndexOf("\\");
+  }
+
+  if (lastSeparator == -1) {
+    dir = ".";
+    return;
+  }
+
+  std::cout << "Index " << lastSeparator << std::endl;
+
+  dir = fileName.left(lastSeparator);
+}
+
+bool MainWindow::directoryIsOk(QString dir) {
+  if (dir == "") {
+    return true;
+  }
+
+  std::cout << dir.toStdString() << std::endl;
+
+  QFile* tmp = new QFile(dir);
+
+  return tmp->exists();
 }
 
 void MainWindow::pointUpdatedSlot(int index, int type) {
@@ -256,12 +308,6 @@ bool MainWindow::savePointsToFile(QString fileName,
   std::ofstream out(newFileName);
 
   if (!out) {
-    QMessageBox::critical(this,
-        tr("Error"), 
-        tr("Failed to save the points, please check the log for more information"));
-
-    std::cerr << "Error while saving file: " << fileName.toStdString() <<
-      std::endl;
     return false;
   }
 
@@ -284,8 +330,8 @@ bool MainWindow::savePointsToFile(QString fileName,
     out << "<tr>\n";
 
     for (int j = 0; j < pointsOnLine; j++) {
-      out << "<th>" << ((step == 10) ? "cm" : "mm") << "</th><th>" << "liters"
-          << "</th>\n";
+      out << "<th>" << ((step == 10) ? tr("cm").toUtf8().constData() : tr("mm").toUtf8().constData())
+          << "</th><th>" << tr("liters").toUtf8().constData() << "</th>\n";
     }
 
     out << "</tr>\n";
@@ -331,7 +377,8 @@ void MainWindow::writeLog() {
 
 bool MainWindow::readPointsFromFile(QString fileName,
     PointsType*& points,
-    int& pointsCount) {
+    int& pointsCount,
+    int inputTableStep) {
   const char* fileNameAsChars = fileName.toStdString().c_str();
   if (strlen(fileNameAsChars) < 1) {
     return false;
@@ -354,11 +401,14 @@ bool MainWindow::readPointsFromFile(QString fileName,
   std::cout << "Reading file: " << fileName.toStdString() << std::endl;
 
   in >> pointsCount;
+  std::cout << inputTableStep << std::endl;
   std::cout << pointsCount << std::endl;
 
   for (int i = 0; i < pointsCount; i++) {
     in >> points[i].first;
     in >> points[i].second;
+
+    points[i].first *= inputTableStep;
 
     std::cout << points[i].first << " " << points[i].second << std::endl;
   }
