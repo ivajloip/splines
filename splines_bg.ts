@@ -6,7 +6,7 @@
     <message>
         <location filename="MainWindow.cpp" line="46"/>
         <source>File</source>
-        <translation type="unfinished">Файл</translation>
+        <translation>Файл</translation>
     </message>
     <message>
         <location filename="MainWindow.cpp" line="49"/>
