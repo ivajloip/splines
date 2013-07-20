@@ -53,6 +53,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
   stepInput = new QComboBox();
   stepInput->addItem(tr("mm"), QVariant(1));
   stepInput->addItem(tr("cm"), QVariant(10));
+  stepInput->setCurrentIndex(1);
   layout->addRow(tr("Measure"), stepInput);
 
   QLabel *label = new QLabel(tr("Y"));
@@ -143,6 +144,8 @@ void MainWindow::importSlot() {
 
     return;
   }
+
+  std::cout << "Points count is " << pointsCount << std::endl;
 
   std::sort(_points, _points + pointsCount);
 
@@ -407,6 +410,13 @@ bool MainWindow::readPointsFromFile(QString fileName,
   for (int i = 0; i < pointsCount; i++) {
     in >> points[i].first;
     in >> points[i].second;
+
+    if (points[i].first == 0) {
+        pointsCount--;
+        i--;
+        std::cout << "Fixing .out reading\n";
+        continue;
+    }
 
     points[i].first *= inputTableStep;
 

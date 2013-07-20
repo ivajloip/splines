@@ -6,7 +6,7 @@
     <message>
         <location filename="MainWindow.cpp" line="46"/>
         <source>File</source>
-        <translation>файл</translation>
+        <translation type="unfinished">Файл</translation>
     </message>
     <message>
         <location filename="MainWindow.cpp" line="49"/>
@@ -45,7 +45,7 @@
     <message>
         <location filename="MainWindow.cpp" line="90"/>
         <source>&amp;File</source>
-        <translation>Файл</translation>
+        <translation>&amp;Файл</translation>
     </message>
     <message>
         <location filename="MainWindow.cpp" line="91"/>
@@ -110,7 +110,7 @@
         <location filename="MainWindow.cpp" line="207"/>
         <location filename="MainWindow.cpp" line="217"/>
         <location filename="MainWindow.cpp" line="309"/>
-        <source>Failed to write the file, maybe you don't have permissions</source>
+        <source>Failed to write the file, maybe you don&apos;t have permissions</source>
         <translation>Грешка при писането на файловете, може би нямате права за писане</translation>
     </message>
     <message>
