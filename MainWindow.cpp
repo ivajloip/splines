@@ -20,6 +20,7 @@
 #include <iostream>
 #include <algorithm>
 #include <locale>
+#include <iomanip> 
 
 MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
   this->resize(450, 480);
@@ -194,7 +195,7 @@ void MainWindow::exportSlot() {
     return;
   }
 
-  if (!savePointsToFile(fileName,points, pointsCount,  step, 2)) {
+  if (!savePointsToFile(fileName,points, pointsCount,  step, 2, 1, ' ')) {
     QMessageBox::critical(this,
         tr("Error"), 
         tr("Failed to write the file, maybe you don't have permissions"));
@@ -204,7 +205,7 @@ void MainWindow::exportSlot() {
     return;
   }
 
-  if (!savePointsToFile(fileName, points, pointsCount, step, 2, 4)) {
+  if (!savePointsToFile(fileName, points, pointsCount, step, 2, 4, ' ')) {
     QMessageBox::critical(this,
         tr("Error"), 
         tr("Failed to write the file, maybe you don't have permissions"));
@@ -286,7 +287,8 @@ bool MainWindow::savePointsToFile(QString fileName,
     int pointsCount,
     int step,
     int type,
-    int pointsOnLine) {
+    int pointsOnLine,
+    char separator) {
   char newFileName[MAX_FILENAME_LENGTH];
   char *suffix;
   const char* fileNameAsChars = fileName.toStdString().c_str();
@@ -307,7 +309,6 @@ bool MainWindow::savePointsToFile(QString fileName,
   snprintf(newFileName, MAX_FILENAME_LENGTH, "%s_%s.%s\0", fileNameAsChars, 
       suffix, ((type & 1) == 0) ? "html" : "txt");
 
-  std::locale::global(std::locale(""));
   std::ofstream out(newFileName);
 
   if (!out) {
@@ -323,7 +324,11 @@ bool MainWindow::savePointsToFile(QString fileName,
 
   if ((type & 1) == 1) {
     out << (pointsCount + step - 1) / step << std::endl;
+    std::locale::global(std::locale(""));
   } else {
+    std::locale separator_locale(std::locale(""), new Numpunct(separator));
+    out.imbue(separator_locale);  // imbue global locale
+
     out << "<!DOCTYPE html PUBLIC \"-//W3C//DTD HTML 4.0 Transitional//EN\">\n";
     out << "<html><head>\n";
     out << "<meta http-equiv=\"Content-Type\" content=\"text/html;charset=UTF-8\">\n";
