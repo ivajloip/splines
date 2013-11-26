@@ -20,6 +20,7 @@
 #include <iostream>
 #include <algorithm>
 #include <locale>
+#include <iomanip> 
 
 MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
   this->resize(450, 480);
@@ -133,10 +134,7 @@ void MainWindow::importSlot() {
   }
 
   int pointsCount;
-  int currentInputIndex = inputStepInput->currentIndex();
-  int inputTableStep = stepInput->itemData(currentInputIndex).toInt();
-
-  if (!readPointsFromFile(fileName, _points, pointsCount, inputTableStep)) {
+  if (!readPointsFromFile(fileName, _points, pointsCount, 1)) {
     QMessageBox::critical(this,
         tr("Error"), 
         tr("Failed to read the points, please check the log for more information"));
@@ -159,6 +157,9 @@ void MainWindow::importSlot() {
 void MainWindow::exportSlot() {
   int currentIndex = stepInput->currentIndex();
   int step = stepInput->itemData(currentIndex).toInt();
+  
+  int inputScaleCurrentIndex = inputStepInput->currentIndex();
+  int inputStep = inputStepInput->itemData(inputScaleCurrentIndex).toInt();
 
   QString fileName = outFileNameInput->text();
 
@@ -167,7 +168,14 @@ void MainWindow::exportSlot() {
 
   int _pointsCount = findBiggestNonZero();
 
-  updateSplinesCalculator(_points, _pointsCount);
+  PointsType* scaled_points = new PointsType[MAX_POINTS_COUNT + 2];
+  for(int i = 0; i < _pointsCount; i++) {
+    scaled_points[i].first = inputStep * _points[i].first;
+    scaled_points[i].second = _points[i].second;
+  }
+
+
+  updateSplinesCalculator(scaled_points, _pointsCount);
 
   std::cout << "Calculating points\n";
   int pointsCount = splinesCalculator->getResultPointsCount();
@@ -194,7 +202,7 @@ void MainWindow::exportSlot() {
     return;
   }
 
-  if (!savePointsToFile(fileName,points, pointsCount,  step, 2)) {
+  if (!savePointsToFile(fileName,points, pointsCount,  step, 2, 1, ' ')) {
     QMessageBox::critical(this,
         tr("Error"), 
         tr("Failed to write the file, maybe you don't have permissions"));
@@ -204,7 +212,7 @@ void MainWindow::exportSlot() {
     return;
   }
 
-  if (!savePointsToFile(fileName, points, pointsCount, step, 2, 4)) {
+  if (!savePointsToFile(fileName, points, pointsCount, step, 2, 4, ' ')) {
     QMessageBox::critical(this,
         tr("Error"), 
         tr("Failed to write the file, maybe you don't have permissions"));
@@ -286,7 +294,8 @@ bool MainWindow::savePointsToFile(QString fileName,
     int pointsCount,
     int step,
     int type,
-    int pointsOnLine) {
+    int pointsOnLine,
+    char separator) {
   char newFileName[MAX_FILENAME_LENGTH];
   char *suffix;
   const char* fileNameAsChars = fileName.toStdString().c_str();
@@ -307,7 +316,6 @@ bool MainWindow::savePointsToFile(QString fileName,
   snprintf(newFileName, MAX_FILENAME_LENGTH, "%s_%s.%s\0", fileNameAsChars, 
       suffix, ((type & 1) == 0) ? "html" : "txt");
 
-  std::locale::global(std::locale(""));
   std::ofstream out(newFileName);
 
   if (!out) {
@@ -323,7 +331,11 @@ bool MainWindow::savePointsToFile(QString fileName,
 
   if ((type & 1) == 1) {
     out << (pointsCount + step - 1) / step << std::endl;
+    std::locale::global(std::locale(""));
   } else {
+    std::locale separator_locale(std::locale(""), new Numpunct(separator));
+    out.imbue(separator_locale);  // imbue global locale
+
     out << "<!DOCTYPE html PUBLIC \"-//W3C//DTD HTML 4.0 Transitional//EN\">\n";
     out << "<html><head>\n";
     out << "<meta http-equiv=\"Content-Type\" content=\"text/html;charset=UTF-8\">\n";

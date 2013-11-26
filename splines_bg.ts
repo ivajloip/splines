@@ -13,14 +13,14 @@
         <location filename="MainWindow.cpp" line="54"/>
         <location filename="MainWindow.cpp" line="335"/>
         <source>mm</source>
-        <translation>мм</translation>
+        <translation>mm</translation>
     </message>
     <message>
         <location filename="MainWindow.cpp" line="50"/>
         <location filename="MainWindow.cpp" line="55"/>
         <location filename="MainWindow.cpp" line="335"/>
         <source>cm</source>
-        <translation>см</translation>
+        <translation>cm</translation>
     </message>
     <message>
         <location filename="MainWindow.cpp" line="51"/>
@@ -121,7 +121,7 @@
     <message>
         <location filename="MainWindow.cpp" line="336"/>
         <source>liters</source>
-        <translation>литри</translation>
+        <translation>литри, l</translation>
     </message>
 </context>
 </TS>

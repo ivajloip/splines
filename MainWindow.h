@@ -12,7 +12,7 @@
 
 #include "LineEdit.h"
 
-#define MAX_POINTS_COUNT 30
+#define MAX_POINTS_COUNT 50
 #define MAX_FILENAME_LENGTH 2048
 
 class MainWindow : public QMainWindow {
@@ -52,7 +52,8 @@ private:
       int pointsCount,
       int step = 1,
       int type = 1,
-      int pointsOnLine = 1); 
+      int pointsOnLine = 1,
+      char separator = 0); 
 
   void writeLog();
 
@@ -73,6 +74,27 @@ protected slots:
   void exportSlot();
   void closeSlot();
   void pointUpdatedSlot(int index, int type);
+};
+
+
+#include <locale>       // std::locale
+
+class Numpunct : public std::numpunct<char> {
+  char _separator;
+
+  public: 
+    Numpunct(char separator) {
+      _separator = separator;
+    }
+
+  protected:
+    virtual char do_thousands_sep() const {
+        return _separator;
+    }
+
+    virtual std::string do_grouping() const {
+        return "\03";
+    }
 };
 
 #endif
