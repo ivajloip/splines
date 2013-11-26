@@ -61,7 +61,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
 
   createInputs(layout);
 
-  updateInputs();
+  updateInputs("");
   
   std::cout << "Bar\n";
   
@@ -149,7 +149,7 @@ void MainWindow::importSlot() {
 
   std::sort(_points, _points + pointsCount);
 
-  updateInputs();
+  updateInputs(fileName);
 
   this->saveAction->setEnabled(true);
 
@@ -454,10 +454,12 @@ bool cmpPoints(PointsType point1, PointsType point2) {
   return point1.first < point2.first;
 }
 
-void MainWindow::updateInputs() {
+void MainWindow::updateInputs(QString fileName) {
   char tmp[16];
 
   std::cout << "Updating inputs" << std::endl;
+
+  this->outFileNameInput->setText(fileName);
 
   for (int i = 0; i < MAX_POINTS_COUNT; i++) {
     snprintf(tmp, 16, "%d", _points[i].first);

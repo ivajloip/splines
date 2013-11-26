@@ -58,7 +58,7 @@ private:
 
   int findBiggestNonZero();
 
-  void updateInputs();
+  void updateInputs(QString fileName);
 
   void getDirectoryForFile(QString fileName, QString &dir);
 
