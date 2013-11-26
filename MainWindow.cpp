@@ -134,10 +134,7 @@ void MainWindow::importSlot() {
   }
 
   int pointsCount;
-  int currentInputIndex = inputStepInput->currentIndex();
-  int inputTableStep = stepInput->itemData(currentInputIndex).toInt();
-
-  if (!readPointsFromFile(fileName, _points, pointsCount, inputTableStep)) {
+  if (!readPointsFromFile(fileName, _points, pointsCount, 1)) {
     QMessageBox::critical(this,
         tr("Error"), 
         tr("Failed to read the points, please check the log for more information"));
@@ -160,6 +157,9 @@ void MainWindow::importSlot() {
 void MainWindow::exportSlot() {
   int currentIndex = stepInput->currentIndex();
   int step = stepInput->itemData(currentIndex).toInt();
+  
+  int inputScaleCurrentIndex = inputStepInput->currentIndex();
+  int inputStep = inputStepInput->itemData(inputScaleCurrentIndex).toInt();
 
   QString fileName = outFileNameInput->text();
 
@@ -168,7 +168,14 @@ void MainWindow::exportSlot() {
 
   int _pointsCount = findBiggestNonZero();
 
-  updateSplinesCalculator(_points, _pointsCount);
+  PointsType* scaled_points = new PointsType[MAX_POINTS_COUNT + 2];
+  for(int i = 0; i < _pointsCount; i++) {
+    scaled_points[i].first = inputStep * _points[i].first;
+    scaled_points[i].second = _points[i].second;
+  }
+
+
+  updateSplinesCalculator(scaled_points, _pointsCount);
 
   std::cout << "Calculating points\n";
   int pointsCount = splinesCalculator->getResultPointsCount();

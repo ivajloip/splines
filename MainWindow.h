@@ -12,7 +12,7 @@
 
 #include "LineEdit.h"
 
-#define MAX_POINTS_COUNT 30
+#define MAX_POINTS_COUNT 50
 #define MAX_FILENAME_LENGTH 2048
 
 class MainWindow : public QMainWindow {
